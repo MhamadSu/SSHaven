@@ -97,8 +97,7 @@ SSHaven is built with:
 │   ├── components/  # React components
 │   ├── hooks/       # Custom React hooks
 │   └── lib/         # Utility functions and types
-├── public/          # Static assets
-└── docs/            # Documentation
+└──  Rest of the files
 ```
 
 ## 📝 License
