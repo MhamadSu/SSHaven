@@ -87,19 +87,6 @@ SSHaven is built with:
 - `npm run lint`: Run linter
 - `npm run typecheck`: Run TypeScript type checking
 
-### Project Structure
-
-```
-/
-├── src/
-│   ├── ai/          # AI integration code
-│   ├── app/         # Next.js app router
-│   ├── components/  # React components
-│   ├── hooks/       # Custom React hooks
-│   └── lib/         # Utility functions and types
-└──  Rest of the files
-```
-
 ## 📝 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
