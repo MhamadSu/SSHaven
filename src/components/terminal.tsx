@@ -56,7 +56,7 @@ export function Terminal({ sessionInfo, onDisconnect }: TerminalProps) {
       const prettyOs = osInfo.split('\n').find(line => line.startsWith('PRETTY_NAME='))?.split('=')[1]?.replace(/"/g, '') || 'Unknown OS';
       connectionMessage += `\nOS Detected: ${prettyOs}. AI commands will be tailored for this system.`;
     }
-    connectionMessage += '\nWelcome to Term Buddy! Type a command to get started.'
+    connectionMessage += '\nWelcome to SSHaven! Type a command to get started.'
 
     setHistory([
       {

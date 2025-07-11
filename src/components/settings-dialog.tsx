@@ -38,7 +38,7 @@ export function SettingsDialog({ isOpen, onOpenChange }: SettingsDialogProps) {
             <DialogHeader>
               <DialogTitle>Settings</DialogTitle>
               <DialogDescription>
-                Configure your personal settings for Term Buddy.
+                Configure your personal settings for SSHaven.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
