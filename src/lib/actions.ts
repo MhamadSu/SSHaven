@@ -64,17 +64,32 @@ export async function connectSsh(credentials: SshCredentials): Promise<{ success
     conn.on('ready', () => {
       sessions.set(sessionId, sessionState);
       
-      conn.exec('cat /etc/os-release', (err, stream) => {
+      conn.shell((err, stream) => {
         if (err) {
-            resolve({ success: true, sessionId, osInfo: '' });
-            return;
+          resolve({ success: false, error: err.message });
+          return;
         }
-        let osInfo = '';
+        sessionState.activeStream = stream;
         stream.on('data', (data: Buffer) => {
-            osInfo += data.toString();
+          sessionState.commandOutput += data.toString();
+        }).stderr.on('data', (data: Buffer) => {
+          sessionState.commandOutput += data.toString();
+          sessionState.commandIsError = true;
         }).on('close', () => {
+          sessionState.activeStream = null;
+          sessionState.isCommandRunning = false;
+        });
+        
+        stream.write('cat /etc/os-release\n');
+        let osInfo = '';
+        const osInfoHandler = (data: Buffer) => {
+          osInfo += data.toString();
+          if (osInfo.includes('PRETTY_NAME')) {
+            stream.removeListener('data', osInfoHandler);
             resolve({ success: true, sessionId, osInfo });
-        }).stderr.on('data', () => {});
+          }
+        };
+        stream.on('data', osInfoHandler);
       });
 
     }).on('error', (err) => {
@@ -119,45 +134,19 @@ export async function executeCommand(sessionId: string, command: string, force: 
   const session = getSession(sessionId);
 
   if (session.isCommandRunning) {
-     return { command, isError: true }; // Let client handle message
+     return { command, isError: true };
   }
 
-  // Reset state for new command
   session.commandOutput = '';
   session.isCommandRunning = true;
   session.commandIsError = false;
 
-  return new Promise((resolve) => {
-      session.client.exec(command, { pty: true }, (err, stream) => {
-          if (err) {
-              session.isCommandRunning = false;
-              session.commandOutput = err.message;
-              session.commandIsError = true;
-              resolve({ command, isError: true });
-              return;
-          }
-          
-          session.activeStream = stream;
+  if (!session.activeStream) {
+    return { command, isError: true };
+  }
 
-          stream.on('close', (code: number) => {
-              session.isCommandRunning = false;
-              session.activeStream = null; 
-              if (code !== 0) {
-                // A non-zero exit code isn't always an "error" in the traditional sense (e.g. grep finds nothing)
-                // but we might still want to flag it. We set error state on stderr instead.
-                // session.commandIsError = true;
-              }
-          }).on('data', (data: Buffer) => {
-              session.commandOutput += data.toString();
-          }).stderr.on('data', (data: Buffer) => {
-              session.commandOutput += data.toString();
-              session.commandIsError = true;
-          });
-
-          // Resolve immediately so client can start polling
-          resolve({ command, isError: false });
-      });
-  });
+  session.activeStream.write(command + '\n');
+  return { command, isError: false };
 }
 
 export async function readFromPty(sessionId: string): Promise<{ output: string; isRunning: boolean; isError: boolean; }> {
@@ -176,7 +165,6 @@ export async function writeToPty(sessionId: string, input: string): Promise<{suc
         return { success: false, error: 'No active command is running.' };
     }
     return new Promise(resolve => {
-        // PTY needs a newline to execute
         const commandToWrite = input.endsWith('\n') ? input : input + '\n';
         session.activeStream!.write(commandToWrite, 'utf8', (err) => {
             if (err) {
