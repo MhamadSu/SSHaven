@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Play, AlertCircle, HardDrive, Plus, Trash2, Edit, Server, X, Settings } from 'lucide-react';
+import { Loader2, Play, AlertCircle, HardDrive, Plus, Trash2, Edit, Server, X, Settings, Github } from 'lucide-react';
 import type { SshCredentials, SessionInfo } from '@/lib/types';
 import { connectSsh } from '@/lib/actions';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -149,17 +149,30 @@ export function ServerList({ onConnect, onCancel }: ServerListProps) {
           <CardContent>
             {renderServerList()}
           </CardContent>
-          <CardFooter className="flex gap-2">
-            {onCancel && (
-                <Button variant="outline" onClick={onCancel}>
-                    <X className="mr-2 h-4 w-4"/>
-                    Cancel
-                </Button>
-            )}
-            <Button className="w-full" onClick={handleAddNew}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add New Server
-            </Button>
+          <CardFooter className="flex flex-col gap-3">
+            <div className="flex gap-2 w-full">
+              {onCancel && (
+                  <Button variant="outline" onClick={onCancel}>
+                      <X className="mr-2 h-4 w-4"/>
+                      Cancel
+                  </Button>
+              )}
+              <Button className="w-full" onClick={handleAddNew}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add New Server
+              </Button>
+            </div>
+            <a 
+              href="https://github.com/MhamadSu/SSHaven" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center justify-center w-full"
+            >
+              <Button variant="outline" className="w-full">
+                <Github className="mr-2 h-4 w-4" />
+                View on GitHub
+              </Button>
+            </a>
           </CardFooter>
       </Card>
       <SshConnectForm 
