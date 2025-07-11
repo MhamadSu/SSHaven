@@ -240,7 +240,7 @@ export function Terminal({ sessionInfo, onDisconnect }: TerminalProps) {
   };
 
   const handleAiSuggestion = async (entry: HistoryEntry) => {
-    if (!entry || isPolling || !apiKey) {
+    if (!entry || !apiKey) {
       if (!apiKey) {
         toast({
           variant: 'destructive',
@@ -381,6 +381,21 @@ Command interrupted by user.`,
     };
   }, [isCommandRunning]);
 
+  const formatAnsiOutput = (text: string): string => {
+    return text
+      .replace(/\x1B\[0m/g, '</span>')
+      .replace(/\x1B\[01;31m/g, '<span style="color: red; font-weight: bold;">')
+      .replace(/\x1B\[01;32m/g, '<span style="color: green; font-weight: bold;">')
+      .replace(/\x1B\[01;33m/g, '<span style="color: yellow; font-weight: bold;">')
+      .replace(/\x1B\[01;34m/g, '<span style="color: blue; font-weight: bold;">')
+      .replace(/\x1B\[01;35m/g, '<span style="color: magenta; font-weight: bold;">')
+      .replace(/\x1B\[01;36m/g, '<span style="color: cyan; font-weight: bold;">')
+      .replace(/\x1B\[[0-9;]*[a-zA-Z]/g, '')
+      .replace(/\x1B\[H/g, '')
+      .replace(/\x1B\[J/g, '')
+      .replace(/\?2004[lh]/g, '');
+  };
+
   return (
     <div className="flex flex-col h-full bg-background text-foreground font-code" onKeyDown={handleKeyDown}>
       <header className="flex items-center justify-between p-2 border-b shrink-0">
@@ -391,17 +406,6 @@ Command interrupted by user.`,
           </p>
         </div>
         <div className="flex gap-2">
-          {isCommandRunning && (
-            <Button 
-              variant="destructive" 
-              size="sm" 
-              onClick={stopCommand}
-              className="h-7 text-xs"
-            >
-              <X className="h-3 w-3 mr-1" />
-              Stop
-            </Button>
-          )}
           <Button 
             variant="ghost" 
             size="sm" 
@@ -428,14 +432,17 @@ Command interrupted by user.`,
                     className={`whitespace-pre-wrap mt-1 text-sm ${
                       entry.isError ? 'text-red-400' : 'text-muted-foreground'
                     }`}
+                    style={{ fontFamily: 'monospace' }}
                   >
-                    {entry.output}
+                    {entry.output.split('\n').map((line, index) => (
+                      <div key={index} dangerouslySetInnerHTML={{ __html: formatAnsiOutput(line) }} />
+                    ))}
                     {isPolling && entry.id === activeHistoryId && (
                         <span className="inline-block w-2 h-4 ml-1 bg-foreground animate-pulse" />
                     )}
                   </pre>
                 )}
-                {!isPolling && entry.output && !entry.aiError && !entry.aiContext && (
+                {entry.output && !entry.aiError && !entry.aiContext && (
                   <div className="mt-2">
                       <Button 
                           variant="outline" 
@@ -483,11 +490,23 @@ Command interrupted by user.`,
                 variant="outline"
                 size="sm"
                 onClick={handleTranslate}
-                disabled={isPolling || isTranslating || !currentCommand}
+                disabled={isTranslating || !currentCommand}
                 title="Translate to command"
               >
                 {isTranslating ? <Loader2 className="animate-spin" /> : <Wand2 />}
               </Button>
+              {isCommandRunning && (
+                <Button 
+                  type="button"
+                  variant="destructive"
+                  size="sm" 
+                  onClick={stopCommand}
+                  className="h-7"
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Stop
+                </Button>
+              )}
               <Button type="submit" size="sm" disabled={isTranslating || !currentCommand}>
                   {isPolling ? 'Send' : 'Execute'}
               </Button>
