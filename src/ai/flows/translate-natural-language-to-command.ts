@@ -1,16 +1,13 @@
 'use server';
-/**
- * @fileOverview Translates natural language into a shell command.
- *
- * - translateNaturalLanguageToCommand - A function that handles the translation process.
- */
 
-import {ai} from '@/ai/genkit';
+import { getAiClient } from '@/ai/genkit';
 import type { TranslateNaturalLanguageToCommandInput, TranslateNaturalLanguageToCommandOutput } from '@/lib/types';
 import { TranslateNaturalLanguageToCommandInputSchema, TranslateNaturalLanguageToCommandOutputSchema } from '@/lib/types';
 
 
 export async function translateNaturalLanguageToCommand(input: TranslateNaturalLanguageToCommandInput): Promise<TranslateNaturalLanguageToCommandOutput> {
+  const ai = getAiClient(input.apiKey);
+  
   const prompt = ai.definePrompt({
     name: 'translateNaturalLanguageToCommandPrompt',
     input: {schema: TranslateNaturalLanguageToCommandInputSchema.pick({ naturalLanguageQuery: true, osInfo: true })},

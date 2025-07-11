@@ -1,16 +1,12 @@
 'use server';
 
-/**
- * @fileOverview Suggests next steps or context after a successful command execution.
- *
- * - suggestNextSteps - A function that suggests next steps based on the command and its output.
- */
-
-import {ai} from '@/ai/genkit';
+import { getAiClient } from '@/ai/genkit';
 import type { SuggestNextStepsInput, SuggestNextStepsOutput } from '@/lib/types';
 import { SuggestNextStepsInputSchema, SuggestNextStepsOutputSchema } from '@/lib/types';
 
 export async function suggestNextSteps(input: SuggestNextStepsInput): Promise<SuggestNextStepsOutput> {
+    const ai = getAiClient(input.apiKey);
+    
     const prompt = ai.definePrompt({
         name: 'suggestNextStepsPrompt',
         input: {schema: SuggestNextStepsInputSchema.pick({ command: true, output: true})},

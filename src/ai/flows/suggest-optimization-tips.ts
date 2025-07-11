@@ -1,14 +1,6 @@
-// This file is machine-generated - edit with caution!
 'use server';
-/**
- * @fileOverview A server optimization and security improvement suggestion AI agent.
- *
- * - suggestOptimizationTips - A function that suggests server optimization tips and security improvements.
- * - SuggestOptimizationTipsInput - The input type for the suggestOptimizationTips function.
- * - SuggestOptimizationTipsOutput - The return type for the suggestOptimizationTips function.
- */
 
-import {ai} from '@/ai/genkit';
+import { getAiClient } from '@/ai/genkit';
 import {z} from 'genkit';
 
 const SuggestOptimizationTipsInputSchema = z.object({
@@ -16,6 +8,7 @@ const SuggestOptimizationTipsInputSchema = z.object({
     .string()
     .describe('The history of commands executed on the server.'),
   serverState: z.string().describe('The current state of the server.'),
+  apiKey: z.string().optional().describe('The API key for the AI service.'),
 });
 export type SuggestOptimizationTipsInput = z.infer<typeof SuggestOptimizationTipsInputSchema>;
 
@@ -31,33 +24,24 @@ export type SuggestOptimizationTipsOutput = z.infer<typeof SuggestOptimizationTi
 export async function suggestOptimizationTips(
   input: SuggestOptimizationTipsInput
 ): Promise<SuggestOptimizationTipsOutput> {
-  return suggestOptimizationTipsFlow(input);
+  const ai = getAiClient(input.apiKey);
+  
+  const prompt = ai.definePrompt({
+    name: 'suggestOptimizationTipsPrompt',
+    input: {schema: SuggestOptimizationTipsInputSchema.pick({ commandHistory: true, serverState: true })},
+    output: {schema: SuggestOptimizationTipsOutputSchema},
+    prompt: `You are an AI assistant that provides server optimization and security improvement tips.
+
+    Based on the command history and current server state, suggest potential optimizations and improvements.
+
+    Command History: {{{commandHistory}}}
+    Server State: {{{serverState}}}
+
+    Provide concise and actionable suggestions.
+    Do not make assumptions about what the user wants to do.
+  `,
+  });
+
+  const {output} = await prompt(input);
+  return output!;
 }
-
-const prompt = ai.definePrompt({
-  name: 'suggestOptimizationTipsPrompt',
-  input: {schema: SuggestOptimizationTipsInputSchema},
-  output: {schema: SuggestOptimizationTipsOutputSchema},
-  prompt: `You are an AI assistant that provides server optimization and security improvement tips.
-
-  Based on the command history and current server state, suggest potential optimizations and improvements.
-
-  Command History: {{{commandHistory}}}
-  Server State: {{{serverState}}}
-
-  Provide concise and actionable suggestions.
-  Do not make assumptions about what the user wants to do.
-`,
-});
-
-const suggestOptimizationTipsFlow = ai.defineFlow(
-  {
-    name: 'suggestOptimizationTipsFlow',
-    inputSchema: SuggestOptimizationTipsInputSchema,
-    outputSchema: SuggestOptimizationTipsOutputSchema,
-  },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
-  }
-);

@@ -1,18 +1,13 @@
 'use server';
-/**
- * @fileOverview Analyzes a command error and suggests fixes.
- *
- * - analyzeErrorAndSuggestFix - A function that handles the error analysis and suggestion process.
- */
 
-import {ai} from '@/ai/genkit';
+import { getAiClient } from '@/ai/genkit';
 import type { AnalyzeErrorAndSuggestFixInput, AnalyzeErrorAndSuggestFixOutput } from '@/lib/types';
 import { AnalyzeErrorAndSuggestFixInputSchema, AnalyzeErrorAndSuggestFixOutputSchema } from '@/lib/types';
 
 
 export async function analyzeErrorAndSuggestFix(input: AnalyzeErrorAndSuggestFixInput): Promise<AnalyzeErrorAndSuggestFixOutput> {
-  // We can't pass the API key directly to the model like this with genkit v1
-  // const ai = getAiClient(input.apiKey); 
+  const ai = getAiClient(input.apiKey);
+  
   const prompt = ai.definePrompt({
     name: 'analyzeErrorAndSuggestFixPrompt',
     input: {schema: AnalyzeErrorAndSuggestFixInputSchema.pick({ command: true, errorOutput: true })},
