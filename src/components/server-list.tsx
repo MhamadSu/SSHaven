@@ -104,21 +104,45 @@ export function ServerList({ onConnect, onCancel }: ServerListProps) {
 
     return (
         <div className="space-y-2">
-            {servers.map(server => (
-                <div key={server.id} className="p-3 border rounded-lg flex items-center justify-between">
-                    <div className="flex flex-col">
-                        <span className="font-semibold">{server.username}@{server.host}</span>
+            {servers.map((server, index) => (
+                <div 
+                    key={server.id} 
+                    className="p-3 border rounded-lg flex items-center justify-between hover-lift transition-smooth animate-slide-in glass-effect"
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                    <div className="flex flex-col flex-1 min-w-0">
+                        <span className="font-semibold truncate">{server.username}@{server.host}</span>
                         <span className="text-xs text-muted-foreground">Port: {server.port}</span>
                         {error && error.id === server.id && (
-                            <p className="text-xs text-red-400 mt-1">{error.message}</p>
+                            <p className="text-xs text-red-400 mt-1 animate-fade-in">{error.message}</p>
                         )}
                     </div>
-                    <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(server)}><Edit className="h-4 w-4"/></Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-400 hover:text-red-500" onClick={() => handleDelete(server.id)}><Trash2 className="h-4 w-4"/></Button>
-                        <Button size="sm" onClick={() => handleConnect(server)} disabled={!!isLoading}>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 btn-touch hover-lift" 
+                            onClick={() => handleEdit(server)}
+                        >
+                            <Edit className="h-4 w-4"/>
+                        </Button>
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 btn-touch text-red-400 hover:text-red-500 hover-lift" 
+                            onClick={() => handleDelete(server.id)}
+                        >
+                            <Trash2 className="h-4 w-4"/>
+                        </Button>
+                        <Button 
+                            size="sm" 
+                            onClick={() => handleConnect(server)} 
+                            disabled={!!isLoading}
+                            className="btn-touch hover-lift transition-smooth"
+                        >
                             {isLoading === server.id ? <Loader2 className="animate-spin" /> : <Play className="mr-2 h-4 w-4" />}
-                            Connect
+                            <span className="hidden sm:inline">Connect</span>
+                            <span className="sm:hidden">Go</span>
                         </Button>
                     </div>
                 </div>
@@ -128,8 +152,8 @@ export function ServerList({ onConnect, onCancel }: ServerListProps) {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4 w-full">
-      <Card className="w-full max-w-md shadow-2xl">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4 w-full gradient-bg">
+      <Card className="w-full max-w-md shadow-2xl hover-lift animate-fade-in glass-effect">
           <CardHeader>
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -151,16 +175,25 @@ export function ServerList({ onConnect, onCancel }: ServerListProps) {
           </CardContent>
           <CardFooter className="flex flex-col gap-3">
             <div className="flex gap-2 w-full">
-              {onCancel && (
-                  <Button variant="outline" onClick={onCancel}>
-                      <X className="mr-2 h-4 w-4"/>
-                      Cancel
-                  </Button>
-              )}
-              <Button className="w-full" onClick={handleAddNew}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add New Server
-              </Button>
+            {onCancel && (
+                <Button 
+                    variant="outline" 
+                    onClick={onCancel}
+                    className="btn-touch hover-lift transition-smooth"
+                >
+                    <X className="mr-2 h-4 w-4"/>
+                    <span className="hidden sm:inline">Cancel</span>
+                    <span className="sm:hidden">Back</span>
+                </Button>
+            )}
+            <Button 
+                className="w-full btn-touch hover-lift transition-smooth" 
+                onClick={handleAddNew}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">Add New Server</span>
+              <span className="sm:hidden">Add Server</span>
+            </Button>
             </div>
             <a 
               href="https://github.com/MhamadSu/SSHaven" 
@@ -168,9 +201,13 @@ export function ServerList({ onConnect, onCancel }: ServerListProps) {
               rel="noopener noreferrer"
               className="flex items-center justify-center w-full"
             >
-              <Button variant="outline" className="w-full">
+              <Button 
+                variant="outline" 
+                className="w-full btn-touch hover-lift transition-smooth"
+              >
                 <Github className="mr-2 h-4 w-4" />
-                View on GitHub
+                <span className="hidden sm:inline">View on GitHub</span>
+                <span className="sm:hidden">GitHub</span>
               </Button>
             </a>
           </CardFooter>

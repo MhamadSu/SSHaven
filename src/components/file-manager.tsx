@@ -147,20 +147,36 @@ export function FileManager({ sessionId }: FileManagerProps) {
     const pathSegments = path.split('/').filter(Boolean);
     
     return (
-        <div className="flex flex-col h-full bg-card/30">
-            <header className="p-2 border-b shrink-0 flex items-center justify-between gap-2">
+        <div className="flex flex-col h-full bg-card/30 animate-fade-in">
+            <header className="p-2 border-b shrink-0 flex items-center justify-between gap-2 glass-effect">
                 <div className="flex items-center gap-1 text-sm flex-1 overflow-hidden">
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={goUp} disabled={path==='/' || isLoading}>
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-7 w-7 btn-touch hover-lift transition-smooth" 
+                        onClick={goUp} 
+                        disabled={path==='/' || isLoading}
+                    >
                         <ArrowUp className="h-4 w-4" />
                     </Button>
-                    <div className="flex items-center gap-1 overflow-x-auto whitespace-nowrap">
-                        <Button variant="ghost" size="sm" className="p-1 h-auto" onClick={() => handleBreadcrumbClick(0)}>
+                    <div className="flex items-center gap-1 overflow-x-auto whitespace-nowrap mobile-scroll-smooth scrollbar-thin">
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="p-1 h-auto btn-touch hover-lift transition-smooth" 
+                            onClick={() => handleBreadcrumbClick(0)}
+                        >
                             <Home className="h-4 w-4"/>
                         </Button>
                         {pathSegments.map((segment, index) => (
-                           <div key={index} className="flex items-center gap-1">
+                           <div key={index} className="flex items-center gap-1 animate-slide-in" style={{ animationDelay: `${index * 0.1}s` }}>
                                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                               <Button variant="ghost" size="sm" className="p-1 h-auto" onClick={() => handleBreadcrumbClick(index + 1)}>
+                               <Button 
+                                   variant="ghost" 
+                                   size="sm" 
+                                   className="p-1 h-auto btn-touch hover-lift transition-smooth" 
+                                   onClick={() => handleBreadcrumbClick(index + 1)}
+                               >
                                    {segment}
                                </Button>
                            </div>
@@ -170,30 +186,41 @@ export function FileManager({ sessionId }: FileManagerProps) {
                 <FileUploader sessionId={sessionId} targetPath={path} onUploadComplete={handleUploadComplete} />
             </header>
 
-            <ScrollArea className="flex-1">
+            <ScrollArea className="flex-1 scrollbar-thin mobile-scroll-smooth">
                 {isLoading ? (
-                    <div className="flex items-center justify-center h-full p-4">
+                    <div className="flex items-center justify-center h-full p-4 animate-fade-in">
                         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                     </div>
                 ) : error ? (
-                    <Alert variant="destructive" className="m-4">
+                    <Alert variant="destructive" className="m-4 animate-fade-in">
                         <ServerCrash className="h-4 w-4" />
                         <AlertTitle>Error</AlertTitle>
                         <AlertDescription>{error}</AlertDescription>
                     </Alert>
                 ) : (
                     <div className="p-2 space-y-1">
-                        {files.map(item => (
+                        {files.map((item, index) => (
                             <div
                                 key={item.name}
-                                className="group w-full text-left p-2 rounded-md hover:bg-accent hover:text-accent-foreground focus:outline-none focus:bg-accent focus:text-accent-foreground transition-colors flex items-center justify-between text-sm"
+                                className="group w-full text-left p-2 rounded-md hover:bg-accent hover:text-accent-foreground focus:outline-none focus:bg-accent focus:text-accent-foreground transition-smooth flex items-center justify-between text-sm hover-lift glass-effect animate-slide-in"
+                                style={{ animationDelay: `${index * 0.05}s` }}
                             >
-                                <button onClick={() => handleItemClick(item)} className="flex items-center gap-3 flex-1 truncate">
-                                    {item.isDirectory ? <Folder className="h-5 w-5 text-primary" /> : <File className="h-5 w-5 text-muted-foreground" />}
+                                <button 
+                                    onClick={() => handleItemClick(item)} 
+                                    className="flex items-center gap-3 flex-1 truncate btn-touch touch-action-manipulation"
+                                >
+                                    {item.isDirectory ? 
+                                        <Folder className="h-5 w-5 text-primary" /> : 
+                                        <File className="h-5 w-5 text-muted-foreground" />
+                                    }
                                     <span className="truncate">{item.name}</span>
                                 </button>
                                 <div className="flex items-center gap-2">
-                                    {!item.isDirectory && <span className="text-xs text-muted-foreground hidden md:inline">{formatBytes(item.size)}</span>}
+                                    {!item.isDirectory && (
+                                        <span className="text-xs text-muted-foreground hidden md:inline">
+                                            {formatBytes(item.size)}
+                                        </span>
+                                    )}
                                     <FileManagerActions item={item} onAction={handleAction} />
                                 </div>
                             </div>

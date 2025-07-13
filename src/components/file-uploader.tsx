@@ -1,27 +1,21 @@
-
 "use client";
-
 import { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { uploadFile } from '@/lib/actions';
 import { Button } from './ui/button';
 import { Loader2, Upload } from 'lucide-react';
-
 type FileUploaderProps = {
   sessionId: string;
   targetPath: string;
   onUploadComplete: () => void;
 };
-
 export function FileUploader({ sessionId, targetPath, onUploadComplete }: FileUploaderProps) {
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
     setIsUploading(true);
     try {
       const reader = new FileReader();
@@ -43,13 +37,11 @@ export function FileUploader({ sessionId, targetPath, onUploadComplete }: FileUp
       });
     } finally {
       setIsUploading(false);
-      // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
     }
   };
-
   return (
     <>
       <input

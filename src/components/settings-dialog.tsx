@@ -1,6 +1,4 @@
-
 "use client";
-
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,22 +13,16 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"
 import { useLocalStorage } from '@/hooks/use-local-storage';
-
 type SettingsDialogProps = {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
 };
-
 export function SettingsDialog({ isOpen, onOpenChange }: SettingsDialogProps) {
   const [apiKey, setApiKey] = useLocalStorage<string>('gemini-api-key', '');
-
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    // The key is already saved by the useLocalStorage hook on change.
-    // We just need to close the dialog.
     onOpenChange(false);
   };
-
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-[525px]">

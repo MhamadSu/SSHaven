@@ -1,25 +1,19 @@
-
 "use client";
-
 import * as React from 'react';
 import { cn } from '@/lib/utils';
-
 interface CodeEditorProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   highlightTerm?: string;
 }
-
 const CodeEditor = React.forwardRef<HTMLTextAreaElement, CodeEditorProps>(
   ({ value, highlightTerm, className, ...props }, ref) => {
     const backdropRef = React.useRef<HTMLDivElement>(null);
     const textareaRef = React.useRef<HTMLTextAreaElement>(null);
-
     const handleScroll = (event: React.UIEvent<HTMLTextAreaElement>) => {
       if (backdropRef.current) {
         backdropRef.current.scrollTop = event.currentTarget.scrollTop;
         backdropRef.current.scrollLeft = event.currentTarget.scrollLeft;
       }
     };
-
     const getHighlightedText = () => {
       if (!highlightTerm || !value) {
         return value;
@@ -27,10 +21,7 @@ const CodeEditor = React.forwardRef<HTMLTextAreaElement, CodeEditorProps>(
       const regex = new RegExp(`(${highlightTerm})`, 'gi');
       return (value as string).replace(regex, '<mark>$1</mark>');
     };
-    
-    // Combine refs
     React.useImperativeHandle(ref, () => textareaRef.current!);
-
     return (
       <div className="relative w-full h-full">
         <div
@@ -69,5 +60,4 @@ const CodeEditor = React.forwardRef<HTMLTextAreaElement, CodeEditorProps>(
   }
 );
 CodeEditor.displayName = 'CodeEditor';
-
 export { CodeEditor };

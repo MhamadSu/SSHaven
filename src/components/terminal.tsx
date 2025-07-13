@@ -20,22 +20,76 @@ import { Power, Terminal as TerminalIcon, ChevronRight, AlertTriangle, Loader2, 
 import { useToast } from '@/hooks/use-toast';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 
+interface TerminalState {
+  history: HistoryEntry[];
+  currentCommand: string;
+  isPolling: boolean;
+  activeHistoryId: number | null;
+  isCommandRunning: boolean;
+}
+
 type TerminalProps = {
     sessionInfo: SessionInfo;
     onDisconnect: () => void;
+  persistentState?: TerminalState;
+  onStateUpdate?: (updates: Partial<TerminalState>) => void;
 }
 
-export function Terminal({ sessionInfo, onDisconnect }: TerminalProps) {
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
-  const [currentCommand, setCurrentCommand] = useState('');
+export function Terminal({ sessionInfo, onDisconnect, persistentState, onStateUpdate }: TerminalProps) {
+  const [localHistory, setLocalHistory] = useState<HistoryEntry[]>([]);
+  const [localCurrentCommand, setLocalCurrentCommand] = useState('');
+  const [localIsPolling, setLocalIsPolling] = useState(false);
+  const [localActiveHistoryId, setLocalActiveHistoryId] = useState<number | null>(null);
+  const [localIsCommandRunning, setLocalIsCommandRunning] = useState(false);
+
+  useEffect(() => {
+    if (persistentState) {
+      console.log('Syncing terminal state for:', sessionInfo.credentials.username + '@' + sessionInfo.credentials.host);
+      
+      if (persistentState.history) setLocalHistory(persistentState.history);
+      if (persistentState.currentCommand !== undefined) setLocalCurrentCommand(persistentState.currentCommand);
+      if (persistentState.isPolling !== undefined) setLocalIsPolling(persistentState.isPolling);
+      if (persistentState.activeHistoryId !== undefined) setLocalActiveHistoryId(persistentState.activeHistoryId);
+      if (persistentState.isCommandRunning !== undefined) setLocalIsCommandRunning(persistentState.isCommandRunning);
+    }
+  }, [persistentState, sessionInfo.credentials.username, sessionInfo.credentials.host]);
+
+  const history = persistentState?.history ?? localHistory;
+  const currentCommand = persistentState?.currentCommand ?? localCurrentCommand;
+  const isPolling = persistentState?.isPolling ?? localIsPolling;
+  const activeHistoryId = persistentState?.activeHistoryId ?? localActiveHistoryId;
+  const isCommandRunning = persistentState?.isCommandRunning ?? localIsCommandRunning;
+
+  const setHistory = useCallback((newHistory: HistoryEntry[] | ((prev: HistoryEntry[]) => HistoryEntry[])) => {
+    const historyValue = typeof newHistory === 'function' ? newHistory(history) : newHistory;
+    setLocalHistory(historyValue);
+    onStateUpdate?.({ history: historyValue });
+  }, [history, onStateUpdate]);
+
+  const setCurrentCommand = useCallback((newCommand: string) => {
+    setLocalCurrentCommand(newCommand);
+    onStateUpdate?.({ currentCommand: newCommand });
+  }, [onStateUpdate]);
+
+  const setIsPolling = useCallback((newIsPolling: boolean) => {
+    setLocalIsPolling(newIsPolling);
+    onStateUpdate?.({ isPolling: newIsPolling });
+  }, [onStateUpdate]);
+
+  const setActiveHistoryId = useCallback((newId: number | null) => {
+    setLocalActiveHistoryId(newId);
+    onStateUpdate?.({ activeHistoryId: newId });
+  }, [onStateUpdate]);
+
+  const setIsCommandRunning = useCallback((newIsRunning: boolean) => {
+    setLocalIsCommandRunning(newIsRunning);
+    onStateUpdate?.({ isCommandRunning: newIsRunning });
+  }, [onStateUpdate]);
+
   const [isRiskDialogOpen, setIsRiskDialogOpen] = useState(false);
   const [riskyCommand, setRiskyCommand] = useState<string | null>(null);
   const [isAiLoading, setIsAiLoading] = useState<number | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
-  
-  const [isPolling, setIsPolling] = useState(false);
-  const [activeHistoryId, setActiveHistoryId] = useState<number | null>(null);
-  const [isCommandRunning, setIsCommandRunning] = useState(false);
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -46,11 +100,15 @@ export function Terminal({ sessionInfo, onDisconnect }: TerminalProps) {
 
   const scrollToBottom = () => {
     if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (scrollContainer) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      }
     }
   };
 
   useEffect(() => {
+    if (!persistentState && history.length === 0) {
     let connectionMessage = `Connected to ${credentials.username}@${credentials.host}.`;
     if (osInfo) {
       const prettyOs = osInfo.split('\n').find(line => line.startsWith('PRETTY_NAME='))?.split('=')[1]?.replace(/"/g, '') || 'Unknown OS';
@@ -66,12 +124,13 @@ export function Terminal({ sessionInfo, onDisconnect }: TerminalProps) {
         isError: false,
       }
     ]);
-  }, [credentials, osInfo]);
+    }
+  }, [credentials, osInfo, persistentState, history.length, setHistory]);
 
   useEffect(() => {
     scrollToBottom();
   }, [history, isPolling]);
-  
+
   const stopPolling = useCallback(() => {
     if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
@@ -79,9 +138,9 @@ export function Terminal({ sessionInfo, onDisconnect }: TerminalProps) {
     }
     setIsPolling(false);
     setActiveHistoryId(null);
-  }, []);
+  }, [setIsPolling, setActiveHistoryId]);
 
-  const POLLING_INTERVAL = 100;
+  const POLLING_INTERVAL = 1000;
 
   const checkCommandStatus = useCallback(async (historyId: number) => {
     try {
@@ -127,7 +186,7 @@ export function Terminal({ sessionInfo, onDisconnect }: TerminalProps) {
         return prev;
       });
     }
-  }, [sessionId]);
+  }, [sessionId, stopPolling, setHistory]);
 
   const startPolling = useCallback((historyId: number) => {
     if (pollingIntervalRef.current) {
@@ -138,7 +197,7 @@ export function Terminal({ sessionInfo, onDisconnect }: TerminalProps) {
     pollingIntervalRef.current = setInterval(() => {
       checkCommandStatus(historyId);
     }, POLLING_INTERVAL);
-  }, [checkCommandStatus]);
+  }, [checkCommandStatus, setIsPolling, setActiveHistoryId]);
 
   const pollOutput = useCallback(async () => {
     if (!activeHistoryId) {
@@ -147,7 +206,7 @@ export function Terminal({ sessionInfo, onDisconnect }: TerminalProps) {
     }
     
     await checkCommandStatus(activeHistoryId);
-  }, [activeHistoryId, stopPolling]);
+  }, [activeHistoryId, stopPolling, checkCommandStatus]);
 
   useEffect(() => {
     if (isPolling) {
@@ -165,7 +224,7 @@ export function Terminal({ sessionInfo, onDisconnect }: TerminalProps) {
     await disconnectSsh(sessionId);
     onDisconnect();
   };
-  
+
   const handleClear = () => {
     setHistory(prev => prev.filter(entry => entry.command.startsWith('connect ')));
   }
@@ -203,7 +262,7 @@ export function Terminal({ sessionInfo, onDisconnect }: TerminalProps) {
     } else {
         startPolling(newHistoryEntry.id);
     }
-  }, [sessionId]);
+  }, [sessionId, setHistory, setCurrentCommand, startPolling]);
 
   const handleRiskDialogConfirm = () => {
     if (riskyCommand) {
@@ -212,7 +271,7 @@ export function Terminal({ sessionInfo, onDisconnect }: TerminalProps) {
     setIsRiskDialogOpen(false);
     setRiskyCommand(null);
   };
-  
+
   const handleRiskDialogCancel = () => {
       if (riskyCommand) {
         setHistory(prev => [
@@ -337,6 +396,7 @@ Command interrupted by user.`,
 
   useEffect(() => {
     return () => {
+      console.log('Terminal component cleanup for:', sessionInfo.credentials.username + '@' + sessionInfo.credentials.host);
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
@@ -345,15 +405,16 @@ Command interrupted by user.`,
   }, []);
 
   useEffect(() => {
-    if (scrollAreaRef.current) {
-      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
-      if (scrollContainer) {
-        const isScrolledToBottom = scrollContainer.scrollTop === scrollContainer.scrollHeight - scrollContainer.clientHeight;
-        if (isScrolledToBottom || activeHistoryId !== null) {
-          scrollContainer.scrollTop = scrollContainer.scrollHeight;
-        }
-      }
+    if (isPolling && !pollingIntervalRef.current && activeHistoryId) {
+      console.log('Restoring polling interval for:', sessionInfo.credentials.username + '@' + sessionInfo.credentials.host);
+      pollingIntervalRef.current = setInterval(() => {
+        checkCommandStatus(activeHistoryId);
+      }, POLLING_INTERVAL);
     }
+  }, [isPolling, activeHistoryId, sessionInfo.credentials.username, sessionInfo.credentials.host]);
+
+  useEffect(() => {
+    scrollToBottom();
   }, [history, activeHistoryId]);
 
   useEffect(() => {
@@ -361,6 +422,16 @@ Command interrupted by user.`,
       inputRef.current.focus();
     }
   }, [isPolling]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (inputRef.current && !isPolling) {
+        inputRef.current.focus();
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [sessionId, isPolling]);
 
   const handleKeyDownInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'c' && e.ctrlKey && isCommandRunning) {
@@ -417,8 +488,8 @@ Command interrupted by user.`,
       </header>
       
       <div className="flex flex-col h-full" onClick={() => inputRef.current?.focus()}>
-        <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
-          <div className="flex flex-col gap-4">
+        <ScrollArea className="flex-1" ref={scrollAreaRef}>
+          <div className="flex flex-col gap-4 p-4">
             {history.map((entry) => (
               <div key={entry.id}>
                 <div className="flex items-center gap-2">
@@ -513,7 +584,6 @@ Command interrupted by user.`,
           </form>
         </div>
       </div>
-
 
       <AlertDialog open={isRiskDialogOpen} onOpenChange={setIsRiskDialogOpen}>
         <AlertDialogContent>
