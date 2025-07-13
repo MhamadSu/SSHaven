@@ -9,15 +9,44 @@ SSHaven is a modern, web-based SSH terminal client with AI-powered assistance. Y
 
 ## ✨ Features
 
-- **Multi-Server Support**: Connect and manage multiple SSH sessions in a tabbed interface
-- **AI-Powered Assistance**: Get intelligent suggestions for fixing command errors
-- **Natural Language Commands**: Translate plain English to shell commands
-- **File Manager**: Browse, upload, download, and edit files on remote servers
-- **System Monitoring**: View real-time system resource usage
+### Terminal Management
+- **Advanced SSH Terminal**: Full-featured terminal with command history and real-time output
+- **Command History**: Persistent command history across sessions
 
-- **Split View Interface**: Terminal and tools side-by-side for efficient workflow
-- **Modern UI**: Clean, responsive interface built with React and Tailwind CSS
-- **Mobile Support**: Coming soon! Access your SSH sessions on the go from any device
+### AI-Powered Assistance
+- **Natural Language Commands**: Convert English descriptions to shell commands
+- **Error Analysis**: AI-powered suggestions for fixing command errors
+- **Context-Aware Help**: Get intelligent suggestions based on command output
+- **Best Practices**: Receive AI recommendations for command usage
+- **Next Steps**: Smart suggestions for follow-up commands
+
+### System Monitoring
+- **Real-Time Stats**: Live CPU, memory, and disk usage monitoring
+- **Process Management**: View and manage running processes
+- **Resource Tracking**: Track system resource utilization over time
+- **Health Indicators**: Visual status indicators for system health
+- **Auto-Refresh**: Automatic updates every 5 seconds
+
+### Network Tools
+- **Port Scanner**: Discover open ports and services on target hosts
+- **Ping Tester**: Test network connectivity and measure latency
+- **Connection Status**: Real-time connection state monitoring
+
+### File Management
+- **File Explorer**: Browse and manage remote files and directories
+- **Upload/Download**: Transfer files between local and remote systems
+- **File Operations**: Rename and delete.
+- **Search & Replace**: Find and replace text in files
+
+### Modern UI/UX
+- **Responsive Design**: Works seamlessly on desktop , tablet and mobile
+- **Dark Mode**: Eye-friendly dark theme
+- **Animated Transitions**: Smooth transitions between views
+
+### Security Features
+- **Secure Connections**: SSH protocol for encrypted communications
+- **API Key Management**: Secure storage of AI API keys
+- **Session Management**: Secure handling of multiple connections
 
 ## 🚀 Getting Started
 
