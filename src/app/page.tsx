@@ -3,7 +3,8 @@
 
 import { useState } from 'react';
 import { ServerList } from '@/components/server-list';
-import { MultiTerminal } from '@/components/multi-terminal';
+import { DashboardLayout } from '@/components/dashboard-layout';
+import { DashboardContent } from '@/components/dashboard-content';
 import type { SessionInfo } from '@/lib/types';
 
 export default function Home() {
@@ -37,20 +38,28 @@ export default function Home() {
     }
   }
 
+  if (showServerList) {
   return (
-    <div className="flex h-screen bg-background">
-      {showServerList ? (
         <ServerList 
           onConnect={handleConnect} 
           onCancel={activeSessions.length > 0 ? handleCancelAdd : undefined}
         />
-      ) : (
-        <MultiTerminal 
+    );
+  }
+
+  return (
+    <DashboardLayout
+      sessions={activeSessions}
+      onAddSession={handleAddNewSession}
+      onDisconnectSession={handleDisconnect}
+    >
+      {(activeSection) => (
+        <DashboardContent
+          activeSection={activeSection}
           sessions={activeSessions}
-          onDisconnect={handleDisconnect}
-          onAddNew={handleAddNewSession}
+          onDisconnectSession={handleDisconnect}
         />
       )}
-    </div>
+    </DashboardLayout>
   );
 }
